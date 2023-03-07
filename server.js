@@ -17,14 +17,22 @@ function updatePlayerPos( Player, Pos){
 
 }
 
-app.get("/", (req, res) => res.type('html').send(html));
+app.get("/", (req, res) =>{ res.type('html').send(html);
+			  console.log("somebody connected");
+			  });
+
 
 
 server.listen(port, () => {
   console.log(`Server listening at port ${port}`);
 });
 
-const io = require('socket.io')(server);
+const io = require('socket.io')(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET"]
+  }
+});
 
 io.on('connection', (socket) => {
 	console.log("Got connection!");
