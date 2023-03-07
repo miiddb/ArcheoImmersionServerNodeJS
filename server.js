@@ -39,6 +39,8 @@ io.on('connection', (socket) => {
 	
 	socket.on('testEvent', (data) => {
 		console.log("Received test Event " + data);
+				PlayersPositions ={} // reset player position every time a new player connects
+
 	});
 
     socket.on('playerUpdatePosition', (data) => {
