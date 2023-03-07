@@ -1,6 +1,6 @@
 const express = require("express");
 const app = express();
-const port = process.env.PORT || 3001;
+const port =  process.env.PORT || 3001;
 var cors = require('cors')
 
 app.use(cors())
@@ -24,11 +24,7 @@ server.listen(port, () => {
   console.log(`Server listening at port ${port}`);
 });
 
-const io = require("socket.io")(server, {
-	cors: {
-        origin: '*'
-    }
-});
+const io = require('socket.io')(server);
 
 io.on('connection', (socket) => {
 	console.log("Got connection!");
