@@ -1,10 +1,24 @@
 const express = require("express");
+var bodyParser = require('body-parser');
+require('dotenv').config();
+
 const app = express();
-const port =  process.env.PORT || 3001;
 var cors = require('cors')
 
+app.use(bodyParser.json({limit: '50mb'}));
 app.use(cors())
+const port = 2300;
+
 const server = require('http').Server(app);
+const pool = require("./db")
+//client.connect();
+
+
+//const args = process.argv;
+
+//console.log(args);
+
+
 
 
 //var Players={}
@@ -17,21 +31,229 @@ function updatePlayerPos( Player, Pos){
 
 }
 
-app.get("/", (req, res) =>{ res.type('html').send(html);
-			  console.log("somebody connected");
-			  });
+app.get('/',  (req, res) => {
+	res.send('Hello I am the Archeoimmersion Sever!')
+  })
+
+app.post("/addNote",async (req, res) =>{
+	try {
+		const {title,
+				creator,
+				lasteditor,
+				id,
+				comment,
+				creationtime,
+				lastedittime,
+				selectionshape,
+				transformposition,
+				transformrotationquat,
+				selectiontransformposition,
+				selectiontransformscale,
+				selectiontransformrotationquat,
+				selectioncolour,
+				b64image,
+				category}
+				 = req.body
+
+		console.log("creating the annotation " + title + " by the creator: " +creator);
+		console.log(req.body);
+			const newAnnotation = await pool.query(
+				 `INSERT INTO annotations_temple 
+				(title,
+				creator,
+				lasteditor,
+				id,
+				comment,
+				creationtime,
+				lastedittime,
+				selectionshape,
+				transformposition,
+				transformrotationquat,
+				selectiontransformposition,
+				selectiontransformscale,
+				selectiontransformrotationquat,
+				selectioncolour,
+				b64image,
+				category) VALUES ($1, $2, $3, $4, $5, $6, $7, $8,$9,$10, $11,$12, $13,$14, $15,$16) 
+				ON CONFLICT (id) DO NOTHING;
+				`
+				,[title,
+				creator,
+				lasteditor,
+				id,
+				comment,
+				creationtime,
+				lastedittime,
+				selectionshape,
+				transformposition,
+				transformrotationquat,
+				selectiontransformposition,
+				selectiontransformscale,
+				selectiontransformrotationquat,
+				selectioncolour,
+				b64image,
+				category]
+			);
+		
+		//res.json(newAnnotation.rows[0].id);
 
 
+		io.emit("AddedNote",id);
+		console.log ("note added " + id);
+
+		//console.log(res);
+	}
+	catch (err) {
+		console.log( " error while posting" +  err);
+	}
+
+});
+
+
+
+app.get("/allNotes", async (req,res) =>{
+try{
+ const allAnnotations = await pool.query("SELECT * FROM annotations_temple ");
+ res.json(allAnnotations.rows)
+
+}
+catch (err){
+	console.log ("error getting all notes")
+	console.log (err.message)
+}
+});
+
+app.get("/getNote/:id", async (req,res) =>{
+		const {id} =  req.params;
+		try{
+
+		 const singeAnnotation = await pool.query("SELECT * FROM annotations_temple WHERE id = $1 " ,[id]);
+		 res.json(singeAnnotation.rows)
+		
+		}
+		catch (err){
+			console.log ("error getting a note")
+			console.log (err.message)
+		}
+
+});
+
+
+app.put("/editNote/:id", async (req,res) =>{
+	try{
+		const {id} =  req.params;
+		const {title,
+				creator,
+				lasteditor,
+				comment,
+				creationtime,
+				//lastedittime,
+				selectionshape,
+				transformposition,
+				transformrotationquat,
+				selectiontransformposition,
+				selectiontransformscale,
+				selectiontransformrotationquat,
+				selectioncolour,
+				b64image,
+				category}
+				 = req.body
+		
+	//console.log ("req.body"	);
+
+		 var date = new Date();
+		const lastedittime=date.toISOString();
+
+	//console.log (req.body	);
+
+	 const editedAnnotation = await pool.query(`
+	 
+	 UPDATE annotations_temple 
+	 
+	 SET title= $1,
+		creator = $2 ,
+		LastEditor= $3,
+		comment = $4,
+		creationtime = $5,
+		lastedittime= $6 ,
+		selectionshape = $7,
+		transformposition= $8,
+		transformrotationquat= $9,
+		selectiontransformposition= $10,
+		selectiontransformscale= $11,
+		selectiontransformrotationquat= $12,
+		selectioncolour= $13,
+		b64image= $14,
+		category=$15
+		
+	 
+	 WHERE id = $16	 ;
+	 
+	 ` ,[title,
+		creator,
+		lasteditor,
+		comment,
+		creationtime,
+		lastedittime,
+		selectionshape,
+		transformposition,
+		transformrotationquat,
+		selectiontransformposition,
+		selectiontransformscale,
+		selectiontransformrotationquat,
+		selectioncolour,
+		b64image,
+		category,
+		id]);
+	 res.json( "annotation edited !"  );
+	
+//showing content of updated columns
+//console.log(editedAnnotation.rows );
+
+
+
+	io.emit("EditedNote", id);
+	console.log ("note edited " + id)
+
+
+
+	}
+	catch (err){
+		console.log ("error putting a note")
+		console.log (err.message)
+	}
+
+});
+
+
+app.delete("/deleteNote/:id", async (req,res) =>{
+	try{
+		const {id} =  req.params;
+
+	 const deletedAnnotation = await pool.query("DELETE FROM annotations_temple WHERE id = $1 " ,[ id]);
+
+
+	 io.emit("DeletedNote", id);
+	 console.log ("note deleted  " + id)
+
+	 res.json("annotation deleted !");
+	
+	}
+	catch (err){
+		console.log ("error deleting a note")
+		console.log (err.message)
+	}
+
+});
 
 server.listen(port, () => {
   console.log(`Server listening at port ${port}`);
 });
 
-const io = require('socket.io')(server, {
-  cors: {
-    origin: "*",
-    methods: ["GET"]
-  }
+const io = require("socket.io")(server, {
+	cors: {
+        origin: '*'
+    }
 });
 
 io.on('connection', (socket) => {
@@ -39,16 +261,14 @@ io.on('connection', (socket) => {
 	
 	socket.on('testEvent', (data) => {
 		console.log("Received test Event " + data);
-				PlayersPositions ={} // reset player position every time a new player connects
-
 	});
 
     socket.on('playerUpdatePosition', (data) => {
 		//console.log("positionUpdated" + data);
 		const datajson = JSON.parse(data);
 
-		console.log(datajson["playerName"])
-		console.log(datajson["playerPosition"])
+		//console.log(datajson["playerName"])
+		//console.log(datajson["playerPosition"])
 
 		updatePlayerPos(datajson["playerName"],datajson["playerPosition"] )
 		//socket.emit("OtherPlayersPositions", PlayersPositions); // with unity standalone
@@ -105,53 +325,6 @@ console.log("sending recurring");
 
 
 
-const html = `
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>ArcheoiMmersionServer</title>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
-    <script>
-      setTimeout(() => {
-        confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 },
-          disableForReducedMotion: true
-        });
-      }, 500);
-    </script>
-    <style>
-      @import url("https://p.typekit.net/p.css?s=1&k=vnd5zic&ht=tk&f=39475.39476.39477.39478.39479.39480.39481.39482&a=18673890&app=typekit&e=css");
-      @font-face {
-        font-family: "neo-sans";
-        src: url("https://use.typekit.net/af/00ac0a/00000000000000003b9b2033/27/l?primer=7cdcb44be4a7db8877ffa5c0007b8dd865b3bbc383831fe2ea177f62257a9191&fvd=n7&v=3") format("woff2"), url("https://use.typekit.net/af/00ac0a/00000000000000003b9b2033/27/d?primer=7cdcb44be4a7db8877ffa5c0007b8dd865b3bbc383831fe2ea177f62257a9191&fvd=n7&v=3") format("woff"), url("https://use.typekit.net/af/00ac0a/00000000000000003b9b2033/27/a?primer=7cdcb44be4a7db8877ffa5c0007b8dd865b3bbc383831fe2ea177f62257a9191&fvd=n7&v=3") format("opentype");
-        font-style: normal;
-        font-weight: 700;
-      }
-      html {
-        font-family: neo-sans;
-        font-weight: 700;
-        font-size: calc(62rem / 16);
-      }
-      body {
-        background: white;
-      }
-      section {
-        border-radius: 1em;
-        padding: 1em;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        margin-right: -50%;
-        transform: translate(-50%, -50%);
-      }
-    </style>
-  </head>
-  <body>
-    <section>
-Hello this is the Archeoimmersion server
-</section>
-  </body>
-</html>
-`
+
+
+
