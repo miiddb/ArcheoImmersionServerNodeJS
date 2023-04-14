@@ -7,8 +7,7 @@ var cors = require('cors')
 
 app.use(bodyParser.json({limit: '50mb'}));
 app.use(cors())
-const port =  process.env.PORT || 3001;
-
+const port = 2300;
 
 const server = require('http').Server(app);
 const pool = require("./db")
@@ -260,8 +259,9 @@ const io = require("socket.io")(server, {
 io.on('connection', (socket) => {
 	console.log("Got connection!");
 	
-	socket.on('testEvent', (data) => {
-		console.log("Received test Event " + data);
+	socket.on('playerConnected', (data) => {
+		console.log("Received new connection from player" + data);
+		PlayersPositions={};
 	});
 
     socket.on('playerUpdatePosition', (data) => {
@@ -311,7 +311,7 @@ io.on('connection', (socket) => {
 
 
 	//soc = socket;
-	socket.emit("testEvent", "Sending");
+	socket.emit("serverAnswers", "answer form server");
 
 /*setInterval(() =>{
 
