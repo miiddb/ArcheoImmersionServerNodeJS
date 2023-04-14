@@ -7,7 +7,8 @@ var cors = require('cors')
 
 app.use(bodyParser.json({limit: '50mb'}));
 app.use(cors())
-const port = 2300;
+const port =  process.env.PORT || 3001;
+
 
 const server = require('http').Server(app);
 const pool = require("./db")
