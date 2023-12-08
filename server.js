@@ -123,6 +123,23 @@ catch (err){
 }
 });
 
+
+app.get("/allCategories", async (req,res) =>{
+	try{
+	 const allCategories = await pool.query("SELECT DISTINCT category FROM annotations_temple;");
+	 res.json(allCategories.rows)
+	
+	}
+	catch (err){
+		console.log ("error getting all categories")
+		console.log (err.message)
+	}
+	});
+
+
+
+
+
 app.get("/getNote/:id", async (req,res) =>{
 		const {id} =  req.params;
 		try{
@@ -260,7 +277,7 @@ io.on('connection', (socket) => {
 	console.log("Got connection!");
 	
 	socket.on('playerConnected', (data) => {
-		console.log("Received new connection from player" + data);
+		console.log("Received new connection from player " + data);
 		PlayersPositions={};
 	});
 
