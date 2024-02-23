@@ -32,7 +32,7 @@ function updatePlayerPos( Player, Pos){
 }
 
 app.get('/',  (req, res) => {
-	res.send('Hello I am the Archeoimmersion Sever!')
+	res.send('Hello I am the Archeoimmersion Sever!!!')
   })
 
 app.post("/addNote",async (req, res) =>{
