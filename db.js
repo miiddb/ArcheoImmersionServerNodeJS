@@ -6,7 +6,7 @@ const pool = new Pool ({
     host: process.env.DB_HOST,
     database:process.env.DB_DATABASENAME,
     port:5432,
-    ssl: true
+    //ssl: true
 
 });
 
