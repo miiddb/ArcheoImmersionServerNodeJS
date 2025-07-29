@@ -330,13 +330,59 @@ io.on('connection', (socket) => {
 	//soc = socket;
 	socket.emit("serverAnswers", "answer form server");
 
-/*setInterval(() =>{
+const FOUR_DAYS_MS = 4 * 24 * 60 * 60 * 1000;
 
-socket.emit("testEvent", "Sending recurring")
-console.log("sending recurring");
+setInterval(async () => {
+  try {
+    socket.emit("testEvent", "Sending recurring");
+    console.log("sending recurring");
 
-}, 6000);
-*/
+    const lastedittime = new Date().toISOString();
+    const id = 'a93d619d-4dbc-4ead-b863-94e138341b76';
+
+    await pool.query(`
+      UPDATE annotations_temple 
+      SET 
+        title = $1,
+        creator = $2,
+        LastEditor = $3,
+        comment = $4,
+        creationtime = $5,
+        lastedittime = $6,
+        selectionshape = $7,
+        transformposition = $8,
+        transformrotationquat = $9,
+        selectiontransformposition = $10,
+        selectiontransformscale = $11,
+        selectiontransformrotationquat = $12,
+        selectioncolour = $13,
+        b64image = $14,
+        category = $15
+      WHERE id = $16;
+    `, [
+      "automatic bookmark",
+      "automatically created",
+      "automatically created",
+      "last updated",
+      lastedittime,
+      lastedittime,
+      "",
+      [0, 0, -20],
+      [0, 0, 0, 0],
+      [0, 0, 0],
+      1,
+      [0, 0, 0, 0],
+      "",
+      "",
+      "automatic",
+      id
+    ]);
+
+    console.log("Recurring annotation updated!");
+  } catch (error) {
+    console.error("Error updating annotation:", error);
+  }
+}, FOUR_DAYS_MS);
 
 
 });
